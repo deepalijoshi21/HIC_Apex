@@ -1,0 +1,41 @@
+--------------------------Trigger Handler Class----------------------------
+
+public class Lead_campaignmember_handler {
+    public static void leadtocampaignmember(List<Lead> lelist){
+        List<Campaignmember> campmember = new List<Campaignmember>();
+        id campid = [select id, name from Campaign where name = 'Sunburn Concert'].id;
+        for(Lead le: lelist){
+            if(campid != null && le.LeadSource == 'Web'){
+               CampaignMember cml = new CampaignMember();
+               cml.campaignid = campid;
+               cml.leadid = le.id;
+               cml.status = 'Ticket Taken';
+               campmember.add(cml);
+            
+            }
+        }
+        if(!campmember.isEmpty()){
+        	insert campmember;
+        }
+        List<Task> tasklist = new List<Task>();
+        for(Lead ld: lelist){
+			if(ld.leadsource == 'Web'){
+                Task tk = new Task();
+                tk.subject = 'Email';
+                tk.ActivityDate = date.today() + 7;
+                tk.WhoId = ld.id;
+                tk.OwnerId = ld.OwnerId;
+                tasklist.add(tk);
+			}
+        }
+        if(!tasklist.isEmpty()){
+        	insert tasklist;
+        }
+    }
+}
+
+----------------------Trigger---------------------
+trigger Leadconvert_campaign_trigger on Lead (after insert) {
+    Lead_campaignmember_handler.leadtocampaignmember(trigger.new);
+
+}
