@@ -1,0 +1,66 @@
+---------------Trigger Handler with @future method--------------
+public class ConvertLeadfuture_handler {
+     public static void leadcovertwithcheckbox(list<Lead> leadlist, map<id,Lead> oldmap)
+    {
+        list<database.LeadConvert> leadconvert = new list<database.LeadConvert>();
+       
+        map<Id, String> leadconvertmap = new map<Id, String>();
+        for(Lead lobj:leadlist){
+            if((lobj.ConvertLead__c == true && oldmap == null) ||
+            (lobj.ConvertLead__c == true && oldmap.get(lobj.id).ConvertLead__c != lobj.ConvertLead__c )){
+                database.LeadConvert lc = new database.LeadConvert();
+                lc.setLeadId(lobj.id);
+                lc.setDoNotCreateOpportunity(false);
+                Leadstatus convertstatus = [select Id, MasterLabel from Leadstatus where IsConverted = true limit 1];
+                lc.setConvertedStatus(convertstatus.MasterLabel);
+                leadconvert.add(lc);
+            }
+        }
+       // database.convertLead(leadconvert);
+        List<Database.LeadConvertResult> result = Database.convertLead(leadConvert);
+        for (Database.LeadConvertResult res : result) {
+            leadconvertmap.put(res.getLeadId(),res.getAccountId()+':'+res.getContactId());
+            leadidtoacc_con( leadconvertmap);
+            System.debug('StringMap' + leadconvertmap);
+        } 
+    }
+    @future
+    public static void leadidtoacc_con(map<Id,String> leadconvertmap){        
+        List<Account> upAcc = new List<Account>();
+        List<Contact> upCon = new List<Contact>();
+        List<String> mapstring = new List<String>();
+        for (Id leadId : leadconvertmap.keySet()) {
+            Id LdId = leadId; 
+            mapstring = leadconvertmap.get(leadId).split(':');
+            system.debug(' mapstring=====>'+ mapstring);
+            Id AccId = mapstring[0];
+            Id CId = mapstring[1];
+          	System.debug('String' + mapstring);
+            System.debug('Lead Id: ' + LdId + ' Account Id: ' + AccId  + ' Contact Id: ' + CId);
+            
+            Account acc = new Account();
+            acc.id = AccId;
+            acc.LeadId__c = LdId;
+            upAcc.add(acc);
+            
+            Contact con = new Contact();
+            con.id = CId;
+            con.LeadId__c = LdId;
+            upCon.add(con);
+            
+        }
+        update upAcc;
+        update upCon;
+    }
+}
+
+
+----------------------------------Trigger------------------------
+trigger ConvertLead_future on Lead (after insert, after update) {
+     if(trigger.isafter && trigger.isinsert){
+            ConvertLeadfuture_handler.leadcovertwithcheckbox(trigger.new,null);
+        }
+        if(trigger.isafter && trigger.isupdate){
+            ConvertLeadfuture_handler.leadcovertwithcheckbox(trigger.new,trigger.oldmap);
+        }
+}
