@@ -1,0 +1,52 @@
+-----------------Queueable Class1---------------------
+public class HIC_Apexclass2_Queueable implements Queueable {
+    Id AccountId;
+    public  HIC_Apexclass2_Queueable(Id accId){
+        this.AccountId = accId;
+    }
+     public void execute(QueueableContext context) { 
+         system.debug('We are in HIC_Apexclass2_Queueable excute method');
+         List<Account> acclist = [select id, name from Account where id =: AccountId];
+         List<Opportunity> oplist = new List<Opportunity>();
+         for (Account acc: acclist){
+           Opportunity opp = new Opportunity();
+           opp.AccountId =  acc.id;
+           opp.name = 'Tata & Tata groups';
+           opp.CloseDate = system.today() +7;
+           opp.StageName = 'Closed Won';
+           oplist.add(opp);
+           system.debug('Opportunity created id & name =>' +opp.Id+ '-' +opp.Name);
+           system.debug('Account id & name =>' +acc.id + '  ' +acc.Name);
+       }
+       if(oplist.size() >0 ){
+          insert oplist;
+       }
+    }
+}
+
+
+---------------Queueable Class2--------------------
+public class HIC_Apexclass2_Queueable implements Queueable {
+    Id AccountId;
+    public  HIC_Apexclass2_Queueable(Id accId){
+        this.AccountId = accId;
+    }
+     public void execute(QueueableContext context) { 
+         system.debug('We are in HIC_Apexclass2_Queueable excute method');
+         List<Account> acclist = [select id, name from Account where id =: AccountId];
+         List<Opportunity> oplist = new List<Opportunity>();
+         for (Account acc: acclist){
+           Opportunity opp = new Opportunity();
+           opp.AccountId =  acc.id;
+           opp.name = 'Tata & Tata groups';
+           opp.CloseDate = system.today() +7;
+           opp.StageName = 'Closed Won';
+           oplist.add(opp);
+           system.debug('Opportunity created id & name =>' +opp.Id+ '-' +opp.Name);
+           system.debug('Account id & name =>' +acc.id + '  ' +acc.Name);
+       }
+       if(oplist.size() >0 ){
+          insert oplist;
+       }
+    }
+}
