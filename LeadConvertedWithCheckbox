@@ -3,15 +3,14 @@ public class ConvertLeadfuture_handler {
      public static void leadcovertwithcheckbox(list<Lead> leadlist, map<id,Lead> oldmap)
     {
         list<database.LeadConvert> leadconvert = new list<database.LeadConvert>();
-       
         map<Id, String> leadconvertmap = new map<Id, String>();
+        Leadstatus convertstatus = [select Id, MasterLabel from Leadstatus where IsConverted = true limit 1];
         for(Lead lobj:leadlist){
             if((lobj.ConvertLead__c == true && oldmap == null) ||
             (lobj.ConvertLead__c == true && oldmap.get(lobj.id).ConvertLead__c != lobj.ConvertLead__c )){
                 database.LeadConvert lc = new database.LeadConvert();
                 lc.setLeadId(lobj.id);
                 lc.setDoNotCreateOpportunity(false);
-                Leadstatus convertstatus = [select Id, MasterLabel from Leadstatus where IsConverted = true limit 1];
                 lc.setConvertedStatus(convertstatus.MasterLabel);
                 leadconvert.add(lc);
             }
