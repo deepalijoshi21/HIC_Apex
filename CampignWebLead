@@ -3,11 +3,11 @@
 public class Lead_campaignmember_handler {
     public static void leadtocampaignmember(List<Lead> lelist){
         List<Campaignmember> campmember = new List<Campaignmember>();
-        id campid = [select id, name from Campaign where name = 'Sunburn Concert'].id;
+        Campaign camp = [select id, name from Campaign where name = 'Sunburn Concert'];
         for(Lead le: lelist){
-            if(campid != null && le.LeadSource == 'Web'){
+            if(camp != null && le.LeadSource == 'Web'){
                CampaignMember cml = new CampaignMember();
-               cml.campaignid = campid;
+               cml.campaignid = camp.id;
                cml.leadid = le.id;
                cml.status = 'Ticket Taken';
                campmember.add(cml);
