@@ -1,0 +1,60 @@
+-----------ContactImageDyanmic_TriggerHandler------
+//Trigger handler for Contentversion to add image in contact customfield
+public class ContactImageDyanmic {
+    public static void contactImage_ContentVersion(List<ContentVersion> contentVersions){
+        list<ContentDistribution> cdlist = new List<ContentDistribution>();
+        string URL;
+        id ContentdocId;
+        list<id> conid=new list<id>();
+        try{
+        for(ContentVersion objCV : contentVersions){
+                ContentdocId = objCV.ContentDocumentId; 
+            //insert ContentDocument with contentversion id
+                ContentDistribution newDist = new ContentDistribution();
+                newDist.ContentVersionId = objCV.Id;
+                newDist.Name = 'External Link';
+                newDist.PreferencesNotifyOnVisit = false;
+                newDist.PreferencesAllowViewInBrowser = true;
+                newDist.PreferencesAllowOriginalDownload=true;
+                cdlist.add(newDist);
+        }
+        if(!cdlist.isEmpty())
+        {
+            insert cdlist;
+        }
+        list<ContentDistribution> cdurl_list =[select id, DistributionPublicUrl from ContentDistribution where id=:cdlist[0].id];
+        list<contentdocumentlink> linklist=[select id,LinkedEntityId,contentdocumentid from contentdocumentlink where contentdocumentid=:ContentdocId];
+        //Iterate through ContentDistribution list for getting URL
+        for(ContentDistribution obj: cdurl_list){
+            URL=obj.DistributionPublicUrl;
+            system.debug('URL ====>  '+URL);
+        }
+		//Iterate through ContentDistributionlink list for getting LinkedEntityId
+        for(contentdocumentlink linkobj:linklist){
+           conid.add(linkobj.LinkedEntityId);
+        }
+        system.debug('conid'+conid);
+        list<Contact> clist=[select id,lastname,ProfileImage__c from contact where id=:conid];
+        list<Contact> updatelist=new list<Contact>();
+        for(Contact cobj:clist){
+            cobj.ProfileImage__c= URL;
+            updatelist.add(cobj);
+        }
+        if(!updatelist.isEmpty()){
+            database.update(updatelist);
+        }
+        }
+        catch(Exception ex){
+            system.debug('Error Occur = '+ex.getMessage() + ex.getLineNumber());
+        }
+    }
+}
+  
+  
+  
+  --------Trigger--------
+  trigger ContentversionImage_Trigger on ContentVersion (after insert) {
+    if(trigger.isafter && trigger.isinsert){
+    ContactImageDyanmic.contactImage_ContentVersion(trigger.new);
+    }
+}
