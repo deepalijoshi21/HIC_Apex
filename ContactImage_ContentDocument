@@ -10,13 +10,13 @@ public class ContactImageDyanmic {
         for(ContentVersion objCV : contentVersions){
                 ContentdocId = objCV.ContentDocumentId; 
             //insert ContentDistribution with contentversion id
-                ContentDistribution newDist = new ContentDistribution();
-                newDist.ContentVersionId = objCV.Id;
-                newDist.Name = 'External Link';
-                newDist.PreferencesNotifyOnVisit = false;
-                newDist.PreferencesAllowViewInBrowser = true;
-                newDist.PreferencesAllowOriginalDownload=true;
-                cdlist.add(newDist);
+                ContentDistribution ConDist = new ContentDistribution();
+                ConDist.ContentVersionId = objCV.Id;
+                ConDist.Name = 'External Link';
+                ConDist.PreferencesNotifyOnVisit = false;
+                ConDist.PreferencesAllowViewInBrowser = true;
+                ConDist.PreferencesAllowOriginalDownload=true;
+                cdlist.add(ConDist);
         }
         if(!cdlist.isEmpty())
         {
