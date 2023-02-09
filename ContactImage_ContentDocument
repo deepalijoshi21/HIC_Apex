@@ -4,12 +4,12 @@ public class ContactImageDyanmic {
     public static void contactImage_ContentVersion(List<ContentVersion> contentVersions){
         list<ContentDistribution> cdlist = new List<ContentDistribution>();
         string URL;
-        id ContentdocId;
-        list<id> conid=new list<id>();
+        Id ContentdocId;
+        list<Id> conid=new list<Id>();
         try{
         for(ContentVersion objCV : contentVersions){
                 ContentdocId = objCV.ContentDocumentId; 
-            //insert ContentDocument with contentversion id
+            //insert ContentDistribution with contentversion id
                 ContentDistribution newDist = new ContentDistribution();
                 newDist.ContentVersionId = objCV.Id;
                 newDist.Name = 'External Link';
