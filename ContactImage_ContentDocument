@@ -5,7 +5,7 @@ public class ContactImageDyanmic {
         list<ContentDistribution> cdlist = new List<ContentDistribution>();
         string URL;
         Id ContentdocId;
-        list<Id> conid=new list<Id>();
+        list<Id> ContactId =new list<Id>();
         try{
         for(ContentVersion objCV : contentVersions){
                 ContentdocId = objCV.ContentDocumentId; 
@@ -29,12 +29,12 @@ public class ContactImageDyanmic {
             URL=obj.DistributionPublicUrl;
             system.debug('URL ====>  '+URL);
         }
-		//Iterate through ContentDistributionlink list for getting LinkedEntityId
+		//Iterate through ContentDistributionlink list for linking LinkedEntityId with contactid
         for(contentdocumentlink linkobj:linklist){
-           conid.add(linkobj.LinkedEntityId);
+           ContactId.add(linkobj.LinkedEntityId);
         }
-        system.debug('conid'+conid);
-        list<Contact> clist=[select id,lastname,ProfileImage__c from contact where id=:conid];
+        system.debug('Contact Ids'+ContactId);
+        list<Contact> clist=[select id,lastname,ProfileImage__c from contact where id=:ContactId];
         list<Contact> updatelist=new list<Contact>();
         for(Contact cobj:clist){
             cobj.ProfileImage__c= URL;
