@@ -2,13 +2,11 @@
 //Trigger handler of Contentversion to add image in contact customfield
 public class ContactImageDyanmic {
     public static void contactImage_ContentVersion(List<ContentVersion> contentVersions){
-        string Image_url;
         Id ContentDocId;
         Id ContentVersionId;
         try{
             for(ContentVersion cv : contentVersions)
             {
-                Image_url = cv.contentUrl;
                 ContentDocId = cv.ContentDocumentId;
                 ContentVersionId = cv.Id;
             }
