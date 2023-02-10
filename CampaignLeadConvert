@@ -1,0 +1,35 @@
+----------BatchClass-----------------
+public class CanpaignLeadConvert_Batch implements Database.Batchable<Sobject> {
+   list<id> leadid=new list<id>();
+    public CanpaignLeadConvert_Batch(){
+        list<CampaignMember> clist=[select id,CampaignId,Campaign.Name,LeadId from CampaignMember  where Campaign.Name='Next Week Concert' ];
+        for(CampaignMember campm:clist){
+            leadid.add(campm.LeadId);
+            system.debug('campm.LeadId'+campm.LeadId);
+        }
+    }
+    public database.QueryLocator  start(database.BatchableContext bc){
+        string query='select id,status from Lead where id=:leadid';
+        return database.getQueryLocator(query);
+    }
+    public static void execute(Database.BatchableContext bc, List<Lead> ldlist){
+        list<database.LeadConvert> ldconlist=new list<database.LeadConvert>();
+        Leadstatus convertstatus=[select Id,MasterLabel from Leadstatus where IsConverted=true limit 1];
+        for(Lead lobj:ldlist){
+            database.LeadConvert ldconver= new database.LeadConvert();
+            ldconver.setLeadId(lobj.id);
+            
+                ldconver.setConvertedStatus(convertstatus.MasterLabel);
+            ldconver.setDoNotCreateOpportunity(false);
+             ldconlist.add(ldconver);
+            system.debug('ldconver'+ldconver);
+            system.debug('ldconlist'+ldconlist);
+        }
+        if(ldconlist.size()>0){
+       database.convertLead(ldconlist);
+             system.debug('ldconlist'+ldconlist);
+            }
+    }
+    public void finish(database.BatchableContext bc){
+    }
+}
