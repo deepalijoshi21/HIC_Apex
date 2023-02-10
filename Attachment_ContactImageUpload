@@ -12,24 +12,16 @@ public class ContactImageDyanmic {
                 ContentDocId = cv.ContentDocumentId;
                 ContentVersionId = cv.Id;
             }
-            
-            List<ContentDocumentLink> DoclinkList = [SELECT Id,LinkedEntityId,ContentDocumentId FROM ContentDocumentLink WHERE ContentDocumentId = :ContentDocId];   
-            
-             String contentDocumentUrl =  system.URL.getSalesforceBaseUrl().toExternalForm() + '/sfc/servlet.shepherd/version/renditionDownload?rendition=THUMB720BY480&versionId=' + ContentVersionId;
-           // https://your-community-domain-url/sfc/servlet.shepherd/version/renditionDownload?rendition=THUMB720BY480&versionId=<ContentVersionId>
-            
+            String contentDocumentUrl =  system.URL.getSalesforceBaseUrl().toExternalForm() + '/sfc/servlet.shepherd/version/renditionDownload?rendition=THUMB720BY480&versionId=' + ContentVersionId;
+            // https://your-community-domain-url/sfc/servlet.shepherd/version/renditionDownload?rendition=THUMB720BY480&versionId=<ContentVersionId>
             System.debug('Content Document URL =====>' + contentDocumentUrl);
             
-            List<Id> DoclinkId = new List<Id>() ;
-            
-            String ContentDocumentLinkk;
-            
+            List<ContentDocumentLink> DoclinkList = [SELECT Id,LinkedEntityId,ContentDocumentId FROM ContentDocumentLink WHERE ContentDocumentId = :ContentDocId];   
+            List<Id> DoclinkId = new List<Id>();
             for(contentDocumentLink conLink : DoclinkList)
             {
-                DoclinkId.add(conLink.LinkedEntityId);
-                ContentDocumentLinkk = conLink.Id;            
+              	DoclinkId.add(conLink.LinkedEntityId);         
             }
-            System.debug('Content Document Link =====>' + ContentDocumentLinkk);
             
             if (DoclinkId != null) {
                 List<Contact> Contact_list = [SELECT Id, Name, ProfileImage__c FROM Contact WHERE Id = :DoclinkId];
@@ -48,7 +40,6 @@ public class ContactImageDyanmic {
         }
 	}
 }
-
 -------------------Trigger-----------------
 trigger ContentversionImage_Trigger on ContentVersion (after insert) {
     if(trigger.isafter && trigger.isinsert){
