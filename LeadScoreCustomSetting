@@ -7,13 +7,13 @@ public class LeadScoreCustomSettingHandler {
         Map<String, Decimal> Budget_map = new Map<String, Decimal>();
         Map<String, Decimal> Startdate_map = new Map<String, Decimal>();
         for(LeadScore_CustomSetting__c score :scorelist){
-            if(score.Nationality__c != null){
+            if(score.Nationality__c != null && score.NationalityScore__c != null){
                 Nationality_map.put(score.Nationality__c, score.NationalityScore__c);
             }
-            if(score.Budget__c != null){
+            if(score.Budget__c != null && score.BudgetScore__c != null){
                 Budget_map.put(score.Budget__c, score.BudgetScore__c);
             }
-            if(score.StartingDate__c != null){
+            if(score.StartingDate__c != null && score.StartingDateScore__c != null){
                 Startdate_map.put(score.StartingDate__c, score.StartingDateScore__c);
             }
         }
