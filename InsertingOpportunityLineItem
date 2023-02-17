@@ -1,0 +1,60 @@
+------Inserting OpportunityLineItem through apex class----------------
+public class LineItemInOpportunity {
+    public static void lineItemMethod(){
+        try{
+            //Inserting Product
+            Product2 pro = new Product2();
+            pro.Name = 'TestingInstallation';
+            pro.IsActive = true;
+            insert pro;
+            system.debug('Product ==>' +pro);
+            
+            //Inserting PriceBook
+            PriceBook2 pb = new PriceBook2();
+            pb.Name = 'InstallationPriceBook';
+            pb.IsActive = true;
+            insert pb;
+            system.debug('PriceBook ==>' +pb);
+            
+            //Inserting PriceBookEntry with Standard PriceBook
+            List<PriceBook2> pblist = [select id, name from PriceBook2 where isStandard = true];
+            Pricebookentry pbest = new Pricebookentry();
+            pbest.Product2Id = pro.id;
+            pbest.Pricebook2Id = pblist[0].id;
+            pbest.UnitPrice = 90;
+            pbest.IsActive = true;
+            insert pbest;
+            system.debug('PriceBookEntry ==>' +pbest);
+            
+            //Inserting PriceBookEntry with Custom PriceBook
+            Pricebookentry pbe = new Pricebookentry();
+            pbe.Product2Id = pro.id;
+            pbe.Pricebook2Id = pb.id;
+            pbe.UnitPrice = 100;
+            pbe.IsActive = true;
+            pbe.UseStandardPrice = false;
+            insert pbe;
+            system.debug('PriceBookEntry ==>' +pbe);
+            
+            //Inserting Opportunity
+            Opportunity op = new Opportunity();
+            op.Name = 'Testop';
+            op.CloseDate = system.today() +150;
+            op.StageName = 'Prospecting';
+            insert op;
+            system.debug('Opportunity ==>' +op);
+            
+            //Inserting OpportunityLineItem
+            OpportunityLineItem oli = new OpportunityLineItem();
+            oli.OpportunityId = op.id;
+            oli.PricebookEntryId = pbe.Id;
+            oli.Quantity = 2;
+            oli.TotalPrice = 200;
+            insert oli;
+            system.debug('OpportunityLineItem ==>' +oli);
+        }
+        catch(Exception ex){
+            system.debug('Error Occur ==>' +ex.getmessage());
+        }
+    }
+}
