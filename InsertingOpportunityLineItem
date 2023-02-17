@@ -4,14 +4,14 @@ public class LineItemInOpportunity {
         try{
             //Inserting Product
             Product2 pro = new Product2();
-            pro.Name = 'TestingInstallation';
+            pro.Name = 'TestingProduct';
             pro.IsActive = true;
             insert pro;
             system.debug('Product ==>' +pro);
             
             //Inserting PriceBook
             PriceBook2 pb = new PriceBook2();
-            pb.Name = 'InstallationPriceBook';
+            pb.Name = 'TestingProductPriceBook';
             pb.IsActive = true;
             insert pb;
             system.debug('PriceBook ==>' +pb);
@@ -38,7 +38,7 @@ public class LineItemInOpportunity {
             
             //Inserting Opportunity
             Opportunity op = new Opportunity();
-            op.Name = 'Testop';
+            op.Name = 'TestOpportunity';
             op.CloseDate = system.today() +150;
             op.StageName = 'Prospecting';
             insert op;
