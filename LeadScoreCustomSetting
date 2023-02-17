@@ -1,6 +1,7 @@
 --------------------------LeadScoreCustomSettingHandler-----------------
 public class LeadScoreCustomSettingHandler {
     public static void leadScoreMethod(List<Lead> leadlist){
+        system.debug('We are inside Method');
         List<LeadScore_CustomSetting__c> scorelist = LeadScore_CustomSetting__c.getAll().values();
         system.debug('Score===>' +scorelist);
         Map<String, Decimal> Nationality_map = new Map<String, Decimal>();
@@ -8,36 +9,53 @@ public class LeadScoreCustomSettingHandler {
         Map<String, Decimal> Startdate_map = new Map<String, Decimal>();
         try{
             for(LeadScore_CustomSetting__c score :scorelist){
-                if(score.Nationality__c != null && score.NationalityScore__c != null){
+                if(score.Nationality__c != null){
                     Nationality_map.put(score.Nationality__c, score.NationalityScore__c);
                 }
-                if(score.Budget__c != null && score.BudgetScore__c != null){
+                if(score.Budget__c != null){
                     Budget_map.put(score.Budget__c, score.BudgetScore__c);
                 }
-                if(score.StartingDate__c != null && score.StartingDateScore__c != null){
+                if(score.StartingDate__c != null){
                     Startdate_map.put(score.StartingDate__c, score.StartingDateScore__c);
                 }
             }
+
             for(Lead le: leadlist){
-                if((le.Nationality__c != null && Nationality_map.containskey(le.Nationality__c))
-                   || (le.Budget__c != null && Budget_map.containskey(le.Budget__c))
-                     ||(le.StartingDate__c != null && Startdate_map.containskey(le.StartingDate__c))){
-                         le.Score__c = Nationality_map.get(le.Nationality__c)*0.4 + Budget_map.get(le.Budget__c)*0.35 + Startdate_map.get(le.StartingDate__c)*0.25;
+                Decimal totalscore = 0;
+                if(le.Nationality__c != null && Nationality_map.containskey(le.Nationality__c)){
+                    totalscore += Nationality_map.get(le.Nationality__c)*0.4;
                 }
-            } 
+                if(le.Budget__c != null && Budget_map.containskey(le.Budget__c)){
+                       totalscore += Budget_map.get(le.Budget__c)*0.35;
+                  }
+                if(le.StartingDate__c != null && Startdate_map.containskey(le.StartingDate__c)){
+                         totalscore += Startdate_map.get(le.StartingDate__c)*0.25;
+                  }
+                le.Score__c = totalscore;
+            }
         }
         catch(Exception ex){
-            system.debug('Error Occur =>' +ex.getmessage());
+            system.debug('Error Occur => '+ex.getMessage());
         }
     }
 }
 
 --------------------Trigger-----------------
 trigger LeadScoreCustomSettingTrigger on Lead (before insert, before update) {
-  if(trigger.isbefore && trigger.isinsert){
-    LeadScoreCustomSettingHandler.leadScoreMethod(Trigger.new);
-  }
-  if(trigger.isbefore && trigger.isupdate){
-    LeadScoreCustomSettingHandler.leadScoreMethod(Trigger.new);
-  }
+    if(trigger.isbefore && trigger.isinsert){
+    	LeadScoreCustomSettingHandler.leadScoreMethod(Trigger.new);
+    }
+    if(Trigger.isbefore && Trigger.isupdate){
+        try{
+            for(Lead lead : Trigger.new) {
+                Lead oldLead = Trigger.oldMap.get(lead.Id);
+            	if((oldLead.Nationality__c != lead.Nationality__c) || (oldLead.Budget__c != lead.Budget__c) || (oldLead.StartingDate__c != lead.StartingDate__c)) {
+                	LeadScoreCustomSettingHandler.leadScoreMethod(Trigger.new);
+            	}
+            }
+        }
+        catch(Exception ex){
+            system.debug('Error Occur ==>' +ex.getMessage());
+        }
+    }
 }
