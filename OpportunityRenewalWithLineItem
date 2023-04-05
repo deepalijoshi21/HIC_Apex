@@ -1,7 +1,7 @@
 ------------------------------Account Opportunity Cloning Trigger Handler------------------------
 public class NewBusinessTriggerHandler { 
     //Method for inserting NewBusiness Recordtype Opportunity
-    public static void Newbusinessrecordinsert(list<Opportunity> newlist, map<id,Opportunity> oldmap){
+    public static void Newbusinessrecordinsert(list<Opportunity> newlist){
                 if(Schema.SObjectType.Opportunity.isAccessible()) {
         	try {
                 list<Opportunity> insertopp = new list<Opportunity>();
@@ -165,7 +165,7 @@ trigger NewBusiness_Trigger on Opportunity (after insert, after update) {
   
    if(trigger.isafter && trigger.isinsert){
       
-        NewBusinessTriggerHandler.Newbusinessrecordinsert(trigger.new, trigger.oldmap);
+        NewBusinessTriggerHandler.Newbusinessrecordinsert(trigger.new);
     }
      if(trigger.isafter && trigger.isupdate){
        
