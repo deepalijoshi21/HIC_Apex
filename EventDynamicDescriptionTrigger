@@ -104,18 +104,20 @@ public class UpdateContactEventHandler {
 ---------Contact Trigger------------------
 trigger UpdateContactEvent on Contact (after update) {
 	List<Contact> conlist = new List<Contact>();
-	for(Contact ct: Trigger.new){
-		if((ct.FirstName!=trigger.oldmap.get(ct.id).FirstName) || (ct.LastName!=trigger.oldmap.get(ct.id).LastName)){
-			conlist.add(ct);
+	if(trigger.isafter && trigger.isupdate){
+		for(Contact ct: Trigger.new){
+			if((ct.FirstName!=trigger.oldmap.get(ct.id).FirstName) || (ct.LastName!=trigger.oldmap.get(ct.id).LastName)){
+				conlist.add(ct);
+			}
 		}
-	}
-    RecordType conrecordtype = [select id, name from recordtype where name = 'Customer'];
-	if(!conlist.isEmpty()){
-		for(Contact con: conlist){
-		    if(con.recordTypeId == conrecordtype.Id){
-				UpdateContactEventHandler.updateEvent(conlist);
-		    }
-        }
+	    RecordType conrecordtype = [select id, name from recordtype where name = 'Customer'];
+		if(!conlist.isEmpty()){
+			for(Contact con: conlist){
+			    if(con.recordTypeId == conrecordtype.Id){
+					UpdateContactEventHandler.updateEvent(conlist);
+			    }
+		}
+		}
 	}
 }
 
