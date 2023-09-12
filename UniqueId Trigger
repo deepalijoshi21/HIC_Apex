@@ -1,0 +1,207 @@
+**************Trigger Handler **********************
+public with sharing class Opportunity_Insert_UniqueId_Handler {
+    
+    // Method 1
+    // desc: method to insert unique IDs into Opportunities
+    public static void insertUniqueIdMethod(List<Opportunity> OppList, Map<Id, Opportunity> oldMap, Boolean isUpdate) {
+        try{
+            
+            //get custom label and split it
+            String now_prefix = System.Label.Opportunity_Unique_Id_Label.split('\\.')[0];
+            String compString = now_prefix+'%';
+            Set<Id> uniqueIdsset = new Set<Id>();
+            
+            String oppsWithUniqueIds = '';
+            Integer index = 0;
+            // Map to store the unique IDs of existing Opportunities
+            Set<String> uniqueIds_Set = new Set<String>();
+            
+            
+            // If updating existing opportunities
+            for (Opportunity opp : OppList) {
+                if (isUpdate) {
+                    Opportunity oldOpp = oldMap.get(opp.Id);
+                    
+                    if (oldOpp != null) { 
+                        if (opp.Unique_Id__c == null && oldOpp.Unique_Id__c != null) {
+                            opp.Manually_Filled_Unique_Id__c = false;
+                        } else if (opp.Unique_Id__c!=null &&  opp.Unique_Id__c != oldOpp.Unique_Id__c) {
+                            opp.Manually_Filled_Unique_Id__c = true;
+                        }
+                    }
+                }// for insert
+                else if (!isUpdate) {
+                    if (opp.Unique_Id__c == null) {
+                        System.debug('#### null uniqeId ');
+                        opp.Manually_Filled_Unique_Id__c = false;
+                    } else {
+                        System.debug('#### Not null uniqeId ');
+                        opp.Manually_Filled_Unique_Id__c = true;
+                    }
+                }
+            }
+            
+            // CONTAIN ALL UNIQUE ID
+            for(Opportunity opp : [SELECT id,Unique_Id__c FROM Opportunity WHERE Unique_Id__c!=null Order By Createddate DESC LIMIT 49999]){
+                if(opp.Unique_Id__c.startsWithIgnoreCase(now_prefix) && oppsWithUniqueIds==''){
+                 	oppsWithUniqueIds = opp.Unique_Id__c;   
+                }
+                
+                uniqueIds_Set.add(opp.Unique_Id__c);
+            }
+            
+            System.debug('@@@@# last uniqueId '+oppsWithUniqueIds);
+            System.debug('@@@@# list of uniqueId '+uniqueIds_Set);
+            System.debug('@@@@# list of uniqueId '+uniqueIds_Set.size());
+            
+            // GENERATE AND UPDATE UNIQUE ID
+            for(Opportunity op : OppList){
+                if(!op.Manually_Filled_Unique_Id__c && op.Unique_Id__c == null ){
+                    String uniqId='';
+                    
+                    // first index
+                    if(index==0){
+                        if(oppsWithUniqueIds!=''){
+                            List<String> uniqueId_Prefix1 = oppsWithUniqueIds.split('\\.');
+                            index = Integer.valueOf(uniqueId_Prefix1[1]);          
+                        }
+                        else{
+                            index = 0;
+                        }
+                    }
+                    
+                    //Create new unique Id
+                    uniqId= getNextUniqueId(oppsWithUniqueIds, uniqueIds_Set, index);
+                    op.Unique_Id__c = uniqId;
+                    uniqueIds_Set.add(uniqId);
+                    List<String> uniqueId_Prefix2 = oppsWithUniqueIds.split('\\.');
+                    System.debug('@@@@@@# uniqueId_Prefix2: '+uniqueId_Prefix2);
+                    index = Integer.valueOf(uniqueId_Prefix2[1]);  
+                    
+                }
+                else{
+                    System.debug('##### Uid not required');
+                }
+            }
+        }
+        catch(Exception ex){
+            System.debug('@@@@@@@@ EXCEPTION ENCOUNTERED : Line: '+ex.getLineNumber()+' msg: '+ex.getMessage());
+        }
+    }
+    
+    // Helper Method 1
+    // Desc: 
+    public static String getNextUniqueId(String oppRecent_UId, Set<String> uniqueIds_Set, Integer index) {
+        String newUniqueId='default-';
+        try{
+            List<String> uniqueIdParts = new List<String>();
+            String now_prefix = System.Label.Opportunity_Unique_Id_Label.split('\\.')[0];
+            Integer counter=index;
+            
+            // Get the counter value from the last unique ID
+            String uniqueId = oppRecent_UId;
+            if(String.isBlank(uniqueId)){
+                counter = 1;
+            }
+            else{
+                //uniqueIdParts = uniqueId.split('\\.');
+                counter = index+1;    
+            }
+            
+            // Generate a new unique ID
+            String formattedCounter = String.valueOf(counter).leftPad(3, '0');
+            newUniqueId = now_prefix+'.'+formattedCounter;
+            //String.format(System.Label.Opportunity_Unique_Id_Label, new List<String>{formattedCounter});
+            
+            // Check if the new unique ID already exists in the set
+            while (uniqueIds_Set.contains(newUniqueId)) {
+                // If it does, increment the counter value by one and generate a new unique ID
+                counter++;
+                formattedCounter = String.valueOf(counter).leftPad(3, '0'); //Assigning 0 if counter is less than 3 digits
+                newUniqueId = now_prefix+'.'+formattedCounter;
+                //newUniqueId = String.format(System.Label.Opportunity_Unique_Id_Label, new List<String>{formattedCounter});
+                system.debug('Unique Id generated =='+newUniqueId);
+            }
+            
+        }
+        catch(exception ex){
+            system.debug('@@@@@ Error Occur =='+ex.getmessage());
+        }
+        return newUniqueId; 
+    }
+}
+
+*****************Trigger ***********************
+trigger Opportunity_Insert_UniqueId on Opportunity (before insert,before update) {
+    // System.Label
+    if (System.Label.BSOppUniqueIdSwitch == 'ON') {
+    Opportunity_Insert_UniqueId_Handler.insertUniqueIdMethod(Trigger.new, Trigger.oldMap, Trigger.isUpdate);
+    }
+}
+
+************* Test Class ******************
+@isTest
+public class Opportunity_Insert_UniqueId_Handler_Test {
+    
+    @isTest 
+    static void testInsertUniqueIdMethod() {
+        // Create test data
+        List<Opportunity> testOpps = new List<Opportunity>();
+        
+        Opportunity opp1 = new Opportunity(Name = 'Test Opp 1',StageName='Closed-Won', Unique_Id__c = 'DL-2023.003',CloseDate= System.today()+10);
+        testOpps.add(opp1);
+        
+        Opportunity opp2 = new Opportunity(Name = 'Test Opp 2',StageName='Prospecting', CloseDate= System.today()+20);
+        opp2.Manually_Filled_Unique_Id__c = false;
+        testOpps.add(opp2);
+        
+        Opportunity opp3 = new Opportunity(Name = 'Test Opp 3', Unique_Id__c = 'DL-2023.002',StageName='Negotiating', CloseDate= System.today()+30);
+        opp3.Manually_Filled_Unique_Id__c = true;
+        testOpps.add(opp3);
+        
+        insert testOpps;
+        
+        // Retrieve Opportunity records with their Unique_Id__c values
+        Map<Id, Opportunity> oldMap = new Map<Id, Opportunity>([
+            SELECT Id, Unique_Id__c,Manually_Filled_Unique_Id__c
+            FROM Opportunity
+            WHERE Id IN :testOpps
+        ]);
+        system.debug('Firstmap'+oldMap );
+        // Call the handler method
+        Test.startTest();
+        Opportunity_Insert_UniqueId_Handler.insertUniqueIdMethod(testOpps, oldMap, true);
+        Test.stopTest();
+        
+        // Verify that Unique Ids are correctly inserted
+        for (Opportunity opp : testOpps) {
+            if (!opp.Manually_Filled_Unique_Id__c && opp.Unique_Id__c == null) {
+                System.assert(opp.Unique_Id__c != null, 'Unique Id should be inserted');
+            }
+        }
+        
+        // Verify that Unique Ids are unique
+        Set<String> uniqueIds = new Set<String>();
+        for (Opportunity opp : testOpps) {
+            if (opp != null && opp.Unique_Id__c != null) {
+                System.assert(!uniqueIds.contains(opp.Unique_Id__c), 'Duplicate Unique Id found');
+                uniqueIds.add(opp.Unique_Id__c);
+            }
+        }
+        
+        // Verify the counter value
+        for (Opportunity opp : testOpps) {
+            if (!opp.Manually_Filled_Unique_Id__c && opp.Unique_Id__c != null) {
+                
+                String[] uniqueIdParts = opp.Unique_Id__c.split('\\.');
+                system.debug('uniqueid@@@@@@>>>>'+uniqueIdParts );
+                if (uniqueIdParts.size() == 3) {
+                    Integer counter = Integer.valueOf(uniqueIdParts[3]);
+                    Boolean isUniqueIdFound = false;
+                    System.assert(counter >= 3, 'Counter value should be at least 1');
+                }
+            }
+        }
+    }
+    
+}
